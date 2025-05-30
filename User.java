@@ -1,8 +1,6 @@
 // File User.java
-
 public class User {
     private static int idCounter = 1;
-    
     private final int id;
     private final String username;
     private final String password;
@@ -19,7 +17,6 @@ public class User {
         return this.username.equals(inputUsername) && this.password.equals(inputPassword);
     }
 
-    // Getters
     public int getId() { return id; }
     public String getUsername() { return username; }
     public String getRole() { return role; }
