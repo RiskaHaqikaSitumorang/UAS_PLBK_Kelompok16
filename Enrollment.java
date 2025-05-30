@@ -1,11 +1,13 @@
-import java.util.*;
+// file enrolment.java
+import java.util.HashMap;
+import java.util.Map;
 
 public class Enrollment implements IEnrollment {
     private final Map<Integer, EnrollmentDetail> daftarEnrollment;
-    private final ICourse kursus;
+    private final ICourseMgt kursus;
     private int enrollmentCounter;
 
-    public Enrollment(ICourse kursus) {
+    public Enrollment(ICourseMgt kursus) {
         this.kursus = kursus;
         this.daftarEnrollment = new HashMap<>();
         this.enrollmentCounter = 1;
@@ -14,25 +16,22 @@ public class Enrollment implements IEnrollment {
     @Override
     public void enrollCourse(int idSiswa, int idKursus) {
         if (!kursus.exists(idKursus)) {
-            System.out.println("[Kursus tidak ditemukan]");
+            notifyUser("Kursus tidak ditemukan");
             return;
         }
-
-        if (sudahTerdaftar(idSiswa, idKursus)) {
-            System.out.println("[Anda sudah terdaftar di kursus ini]");
+        if (isEnrolled(idSiswa, idKursus)) {
+            notifyUser("Anda sudah terdaftar di kursus ini");
             return;
         }
-
         EnrollmentDetail enrollment = new EnrollmentDetail(enrollmentCounter++, idSiswa, idKursus);
         daftarEnrollment.put(enrollment.getId(), enrollment);
-        System.out.println("[Berhasil mendaftar kursus]");
+        notifyUser("Berhasil mendaftar kursus");
     }
 
     @Override
     public void viewUserCourses(int idSiswa) {
         System.out.println("============== KURSUS ANDA ==============");
         boolean adaKursus = false;
-        
         for (EnrollmentDetail enrollment : daftarEnrollment.values()) {
             if (enrollment.getUserId() == idSiswa) {
                 CourseDetail detailKursus = kursus.getCourse(enrollment.getCourseId());
@@ -43,55 +42,45 @@ public class Enrollment implements IEnrollment {
                 adaKursus = true;
             }
         }
-        
         if (!adaKursus) {
-            System.out.println("[Anda belum terdaftar di kursus apapun]");
+            notifyUser("Anda belum terdaftar di kursus apapun");
         }
     }
 
-    @Override
-    public void giveReview(int idSiswa, int idKursus, int rating, String komentar) {
-        if (!sudahTerdaftar(idSiswa, idKursus)) {
-            System.out.println("[Anda belum terdaftar di kursus ini]");
-            return;
-        }
-
-        if (rating < 1 || rating > 5) {
-            System.out.println("[Rating harus antara 1 sampai 5]");
-            return;
-        }
-
-        for (EnrollmentDetail enrollment : daftarEnrollment.values()) {
-            if (enrollment.getUserId() == idSiswa && enrollment.getCourseId() == idKursus) {
-                enrollment.addReview(rating, komentar);
-                System.out.println("[Ulasan berhasil dikirim]");
-                return;
-            }
-        }
-    }
-
-    @Override
     public void updateProgress(int idSiswa, int idKursus, int progress) {
-        if (!sudahTerdaftar(idSiswa, idKursus)) {
-            System.out.println("[Anda belum terdaftar di kursus ini]");
+        if (!isEnrolled(idSiswa, idKursus)) {
+            notifyUser("Anda belum terdaftar di kursus ini");
             return;
         }
-
         if (progress < 0 || progress > 100) {
-            System.out.println("[Progress harus antara 0 sampai 100]");
+            notifyUser("Progress harus antara 0 sampai 100");
             return;
         }
-
         for (EnrollmentDetail enrollment : daftarEnrollment.values()) {
             if (enrollment.getUserId() == idSiswa && enrollment.getCourseId() == idKursus) {
                 enrollment.setProgress(progress);
-                System.out.println("[Progress berhasil diperbarui]");
+                notifyUser("Progress berhasil diperbarui");
                 return;
             }
         }
     }
 
-    private boolean sudahTerdaftar(int idSiswa, int idKursus) {
+    @Override
+    public void notifyUser(String message) {
+        System.out.println("[SISTEM] " + message);
+    }
+
+    @Override
+    public void viewAllCourses() {
+        kursus.viewAllCourses();
+    }
+
+    @Override
+    public boolean exists(int id) {
+        return kursus.exists(id);
+    }
+
+    public boolean isEnrolled(int idSiswa, int idKursus) {
         for (EnrollmentDetail enrollment : daftarEnrollment.values()) {
             if (enrollment.getUserId() == idSiswa && enrollment.getCourseId() == idKursus) {
                 return true;
