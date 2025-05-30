@@ -1,81 +1,119 @@
 // File: Course.java
-import java.util.*;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Course implements ICourse {
-    private final Map<Integer, CourseDetail> courses;
+public class Course implements ICourseMgt {
+    private final Map<Integer, CourseDetail> daftarKursus;
     private int idCounter;
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     public Course() {
-        courses = new HashMap<>();
+        daftarKursus = new HashMap<>();
         idCounter = 1;
     }
 
     @Override
-    public void addCourse(String title, String description, String category) {
-        CourseDetail course = new CourseDetail(idCounter, title, description, category);
-        courses.put(idCounter++, course);
-        System.out.println("[Course added successfully]");
+    public void addCourse(String judul, String deskripsi, String kategori, 
+                         String instruktur, String hari, LocalTime waktuMulai, LocalTime waktuSelesai) {
+        CourseDetail kursus = new CourseDetail(idCounter, judul, deskripsi, kategori, 
+                                             instruktur, hari, waktuMulai, waktuSelesai);
+        daftarKursus.put(idCounter++, kursus);
+        System.out.println("[Kursus berhasil ditambahkan]");
     }
 
     @Override
-    public void editCourse(int id, String newTitle, String newDescription, String newCategory) {
-        if (courses.containsKey(id)) {
-            CourseDetail course = courses.get(id);
-            course.setTitle(newTitle);
-            course.setDescription(newDescription);
-            course.setCategory(newCategory);
-            System.out.println("[Course updated successfully]");
+    public void editCourse(int id, String judulBaru, String deskripsiBaru, String kategoriBaru,
+                          String instrukturBaru, String hariBaru, LocalTime waktuMulaiBaru, LocalTime waktuSelesaiBaru) {
+        if (daftarKursus.containsKey(id)) {
+            CourseDetail kursus = daftarKursus.get(id);
+            kursus.setTitle(judulBaru);
+            kursus.setDescription(deskripsiBaru);
+            kursus.setCategory(kategoriBaru);
+            kursus.setInstructor(instrukturBaru);
+            kursus.setDay(hariBaru);
+            kursus.setWaktuMulai(waktuMulaiBaru);
+            kursus.setWaktuSelesai(waktuSelesaiBaru);
+            System.out.println("[Kursus berhasil diperbarui]");
         } else {
-            System.out.println("[Course not found]");
+            System.out.println("[Kursus tidak ditemukan]");
         }
     }
 
     @Override
     public void deleteCourse(int id) {
-        if (courses.remove(id) != null) {
-            System.out.println("[Course deleted successfully]");
+        if (daftarKursus.remove(id) != null) {
+            System.out.println("[Kursus berhasil dihapus]");
         } else {
-            System.out.println("[Course not found]");
+            System.out.println("[Kursus tidak ditemukan]");
         }
     }
 
     @Override
     public void viewAllCourses() {
-        if (courses.isEmpty()) {
-            System.out.println("[No courses available]");
+        if (daftarKursus.isEmpty()) {
+            System.out.println("[Belum ada kursus tersedia]");
             return;
         }
-
-        System.out.println("============== COURSE LIST ==============");
-        for (CourseDetail course : courses.values()) {
-            System.out.println(course);
-            System.out.println("-------------------------------------------");
+        System.out.println("============== DAFTAR KURSUS ==============");
+        System.out.println("ID\tJudul\t\tInstruktur\tHari\tWaktu Kelas");
+        System.out.println("--------------------------------------------------");
+        for (CourseDetail kursus : daftarKursus.values()) {
+            System.out.printf("%d\t%-15s\t%-10s\t%-7s\t%s - %s\n",
+                            kursus.getId(),
+                            truncate(kursus.getTitle(), 15),
+                            truncate(kursus.getInstructor(), 10),
+                            truncate(kursus.getDay(), 7),
+                            kursus.getWaktuMulai().format(timeFormatter),
+                            kursus.getWaktuSelesai().format(timeFormatter));
         }
     }
 
     @Override
-    public void searchCourse(String keyword) {
-        boolean found = false;
-        System.out.println("============== SEARCH RESULTS ==============");
-        for (CourseDetail course : courses.values()) {
-            if (course.matchesKeyword(keyword)) {
-                System.out.println(course);
-                System.out.println("-------------------------------------------");
-                found = true;
+    public void searchCourse(String kataKunci) {
+        boolean ditemukan = false;
+        System.out.println("============== HASIL PENCARIAN ==============");
+        for (CourseDetail kursus : daftarKursus.values()) {
+            if (kursus.matchesKeyword(kataKunci.toLowerCase())) {
+                if (!ditemukan) {
+                    System.out.println("ID\tJudul\t\tInstruktur\tHari\tWaktu Kelas");
+                    System.out.println("--------------------------------------------------");
+                    ditemukan = true;
+                }
+                System.out.printf("%d\t%-15s\t%-10s\t%-7s\t%s - %s\n",
+                                kursus.getId(),
+                                truncate(kursus.getTitle(), 15),
+                                truncate(kursus.getInstructor(), 10),
+                                truncate(kursus.getDay(), 7),
+                                kursus.getWaktuMulai().format(timeFormatter),
+                                kursus.getWaktuSelesai().format(timeFormatter));
             }
         }
-        if (!found) {
-            System.out.println("[No courses found matching your search]");
+        if (!ditemukan) {
+            System.out.println("[Tidak ditemukan kursus yang sesuai]");
         }
     }
 
     @Override
     public CourseDetail getCourse(int id) {
-        return courses.get(id);
+        return daftarKursus.get(id);
     }
 
     @Override
     public boolean exists(int id) {
-        return courses.containsKey(id);
+        return daftarKursus.containsKey(id);
+    }
+
+    @Override
+    public void notifyUser(String message) {
+        System.out.println("[SISTEM] " + message);
+    }
+
+    private String truncate(String text, int maxLength) {
+        if (text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(0, maxLength - 3) + "...";
     }
 }
